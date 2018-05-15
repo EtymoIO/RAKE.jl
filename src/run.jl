@@ -20,20 +20,21 @@ function Rake(stop_words; min_char_length=3, max_words_length=3, min_keyword_fre
 end
 
 import Base.run
-"""
-Hello steven
-"""
+
 function run(self::Rake, text)
 
     # Convert all multiple whitespace to single whitespace
     cleaned_text = remove_redundant_whitespace(text)
+
+    # Convert to lower case
+    cleaned_text = lowercase(cleaned_text)
 
     # Split on punctuation
     split_on = ['.', '?', '!', '\n', ';', ',', ':', '\u2019', '\u2013']
     sentences = split(cleaned_text, split_on)
 
     # Split on stopwords
-    phrases_as_substrings = split_at_stopwords(sentences)
+    phrases_as_substrings = split_at_stopwords(sentences, Rake.stop_words)
 
     # Remove trailing and leading whitespace and convert the substrings into proper strings
     phrases = String.(strip.(phrases_as_substrings))
@@ -42,11 +43,11 @@ function run(self::Rake, text)
     all_possible_keyphrases = find_all_possible_keyphrases(phrases)
 
     # Score all possible keywords
-    keyphrase_with_score_tuples = calculate_keyphrase_scores(all_possible_keyphrases)
+    keyphrase_with_score = calculate_keyphrase_scores(all_possible_keyphrases)
 
     # Function to compare our (keyword, score) tuples
-    tuple_compare(x,y) = x[2].rank > y[2].rank
-    sorted_keywords = sort(keyword_candidates, lt=tuple_compare)
+    #tuple_compare(x,y) = x[2].rank > y[2].rank
+    #sorted_keywords = sort(keyword_candidates, lt=tuple_compare)
 
-    return sorted_keywords
+    return keyphrase_with_score
 end

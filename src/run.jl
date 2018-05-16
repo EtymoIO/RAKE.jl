@@ -34,10 +34,7 @@ function run(self::Rake, text)
     sentences = split(cleaned_text, split_on)
 
     # Split on stopwords
-    phrases_as_substrings = split_at_stopwords(sentences, Rake.stop_words)
-
-    # Remove trailing and leading whitespace and convert the substrings into proper strings
-    phrases = String.(strip.(phrases_as_substrings))
+    phrases = split_at_stopwords(sentences, Rake.stop_words)
 
     # Find all possible keywords
     all_possible_keyphrases = find_all_possible_keyphrases(phrases)

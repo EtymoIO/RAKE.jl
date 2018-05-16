@@ -22,45 +22,55 @@ function flatten(arr::Vector{Vector{T}}) where {T}
     return flattened_arr
 end
 
+# If it is not Vector of Vectors, return it unchanged
+flatten(arr::Vector) = arr
 
 "Split text at stopwords to produce a vector of strings"
-# TODO make more efficient, alter functions so dont need try catch, fix spacing issue 
-function split_at_stopwords(text, stopwords)
-    phrases = SubString{String}[]
+function split_at_stopwords(text::Union{Vector{SubString{String}},Vector{String}}, stopwords::Vector{String})::Vector{Vector{SubString{String}}}
+
+    # A phrase is a vector of words
+    phrases = Vector{Vector{SubString{String}}}(0)
+    current_phrase = Vector{SubString{String}}(0)
+
     for sentence in text
-        phrases_in_sentence = [sentence]
-        phrases_in_sentence2 = SubString{String}[]
-        for stop_word in stopwords
-            stop_word = stop_word*" "
-            for i in range(1, length(phrases_in_sentence))
-                # Split up each phrase on stopword, then flatten into one vector again
-                try
-                    append!(phrases_in_sentence2, split(phrases_in_sentence[i], stop_word))
-                catch(MethodError) # error when splitting character
-                    append!(phrases_in_sentence2, phrases_in_sentence[i])
+
+        words_in_sentence = split(sentence, ' ')
+        for word in words_in_sentence
+            stopword_found = false
+            for stopword in stopwords
+                if lowercase(word) == stopword
+                    stopword_found = true
+                    break
                 end
             end
-            phrases_in_sentence = phrases_in_sentence2
-            phrases_in_sentence2 = SubString{String}[]
+
+            if stopword_found
+                if length(current_phrase) > 0
+                    push!(phrases, current_phrase)
+                    current_phrase = Vector{SubString{String}}(0)
+                end
+            else
+                push!(current_phrase, word)
+            end
         end
-        try
-            append!(phrases, flatten(phrases_in_sentence))
-        catch(MethodError) # error when 1D array
-            append!(phrases, phrases_in_sentence)
+
+        if length(current_phrase) > 0
+            push!(phrases, current_phrase)
         end
+
     end
+
     return phrases
 end
 
 
 "Take vector of strings and split each string into all possible keyphrases"
 function find_all_possible_keyphrases(phrases, max_phrase_length::Int)
-    all_possible_keyphrases = Array(String,0)
-    for sentence in phrases
-        split_sentence = split.(sentence, ' ')
+    all_possible_keyphrases = Array{String}(0)
+    for phrase in phrases
         for j = 0: max_phrase_length-1
-            for i = 1:(length(split_sentence)-j)
-                push!(all_possible_keyphrases, join(split_sentence[i:i+j], " "))
+            for i = 1:(length(phrase)-j)
+                push!(all_possible_keyphrases, join(phrase[i:i+j], " "))
             end
         end
     end
